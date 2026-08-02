@@ -46,3 +46,12 @@ body {
   background-color: #e2e8f0;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
+
+.location-status {
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  border: 1px solid #dbe4ea;
+  border-radius: 10px;
+  background-color: white;
+  color: #475569;
+}

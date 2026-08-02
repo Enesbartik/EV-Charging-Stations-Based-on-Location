@@ -4,7 +4,11 @@
     <p>Yakınınızdaki elektrikli araç şarj istasyonlarını keşfedin.</p>
   </header>
 
-  <main>
-    <div id="map" data-controller="map"></div>
+  <main data-controller="map">
+    <p class="location-status" data-map-target="status">
+      Konumunuz alınıyor...
+    </p>
+
+    <div id="map" data-map-target="canvas"></div>
   </main>
 </div>
