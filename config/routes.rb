@@ -13,6 +13,7 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
   root "maps#index"
+  get "charging_stations", to: "charging_stations#index"
 
 
 end
