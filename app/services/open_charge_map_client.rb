@@ -62,7 +62,7 @@ end
       longitude: @longitude,
       distance: @distance,
       distanceunit: "KM",
-      maxresults: 50,
+      maxresults: 250,
       compact: true,
       verbose: false,
       key: api_key

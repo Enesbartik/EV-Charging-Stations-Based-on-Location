@@ -1,14 +1,50 @@
+<% google_maps_key = Rails.application.credentials.google_maps_browser_api_key || ENV["GOOGLE_MAPS_BROWSER_API_KEY"] %>
+
 <div class="page-container">
-  <header class="page-header">
+<header class="page-header page-header-with-actions">
+  <div>
     <h1>EV Charging Stations</h1>
     <p>Yakınınızdaki elektrikli araç şarj istasyonlarını keşfedin.</p>
-  </header>
+  </div>
 
-  <main data-controller="map">
+  <div class="header-actions">
+    <%= link_to "Kayıtlı İstasyonlar",
+                stations_path,
+                class: "secondary-button" %>
+
+    <%= link_to "Yeni İstasyon Ekle",
+                new_station_path,
+                class: "primary-button" %>
+  </div>
+</header>
+
+  <main data-controller="map" data-google-maps-api-key="<%= google_maps_key %>">
     <section class="map-toolbar">
-      <p class="location-status" data-map-target="status">
-        Konumunuz alınıyor...
-      </p>
+      <div class="address-search-group">
+        <input
+          type="text"
+          class="address-search-input"
+          placeholder="İl, ilçe veya adres ara"
+          data-map-target="search"
+          data-action="keydown.enter->map#searchAddress"
+        >
+
+        <button
+          type="button"
+          class="secondary-button"
+          data-action="click->map#searchAddress"
+        >
+          Ara
+        </button>
+
+        <button
+          type="button"
+          class="primary-button"
+          data-action="click->map#useUserLocation"
+        >
+          Konumumu Kullan
+        </button>
+      </div>
 
       <div class="distance-filter">
         <label for="distance">Arama mesafesi</label>
@@ -18,24 +54,46 @@
           data-map-target="distance"
           data-action="change->map#changeDistance"
         >
+          <option value="1">1 km</option>
+          <option value="2">2 km</option>
           <option value="5">5 km</option>
           <option value="10" selected>10 km</option>
+          <option value="15">15 km</option>
+          <option value="20">20 km</option>
+          <option value="25">25 km</option>
+          <option value="30">30 km</option>
         </select>
       </div>
+
+      <p class="location-status" data-map-target="status">
+        Konumunuz alınıyor...
+      </p>
     </section>
 
     <div id="map" data-map-target="canvas"></div>
 
     <div class="map-legend">
-      <span>
-        <span class="legend-dot legend-dot-user"></span>
-        Konumunuz
-      </span>
+  <span>
+    <span class="legend-dot legend-dot-user"></span>
+    Konumunuz
+  </span>
 
-      <span>
-        <span class="legend-dot legend-dot-station"></span>
-        Şarj istasyonu
-      </span>
-    </div>
+  <span>
+    <span class="legend-dot legend-dot-station"></span>
+    Open Charge Map istasyonu
+  </span>
+
+  <span>
+    <span class="legend-dot legend-dot-saved"></span>
+    Kendi istasyonunuz
+  </span>
+
+  <span>
+    <span class="legend-dot legend-dot-favorite"></span>
+    Favori istasyon
+  </span>
+</div>
+
+
   </main>
 </div>

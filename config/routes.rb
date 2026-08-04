@@ -4,4 +4,12 @@ Rails.application.routes.draw do
   get "/charging_stations",
       to: "charging_stations#index",
       as: :charging_stations
+
+  get "/maps/geocode",
+      to: "maps#geocode",
+      as: :maps_geocode
+
+  resources :stations, except: :show do
+    patch :toggle_favorite, on: :member
+  end
 end

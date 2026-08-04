@@ -1,5 +1,5 @@
 class ChargingStationsController < ApplicationController
-  ALLOWED_DISTANCES = [5, 10].freeze
+  ALLOWED_DISTANCES = [1, 2, 5, 10, 15, 20, 25, 30].freeze
 
   def index
     latitude = Float(params.require(:latitude))
@@ -8,7 +8,7 @@ class ChargingStationsController < ApplicationController
 
     unless ALLOWED_DISTANCES.include?(distance)
       render json: {
-        error: "Arama mesafesi 5 veya 10 km olmalıdır."
+        error: "Arama mesafesi 1, 2, 5, 10, 15, 20, 25 veya 30 km olmalıdır."
       }, status: :unprocessable_entity
 
       return
@@ -20,7 +20,14 @@ class ChargingStationsController < ApplicationController
       distance: distance
     ).call
 
-    render json: stations.filter_map { |station| format_station(station) }
+    open_charge_map_ids = stations.filter_map { |station| station["ID"]&.to_s }
+    favorite_external_ids = Station.where(
+      source: "open_charge_map",
+      favorite: true,
+      external_id: open_charge_map_ids
+    ).pluck(:external_id).map(&:to_s)
+
+    render json: stations.filter_map { |station| format_station(station, favorite_external_ids) }
   rescue ActionController::ParameterMissing, ArgumentError
     render json: {
       error: "Geçerli latitude ve longitude değerleri gönderilmelidir."
@@ -33,10 +40,11 @@ class ChargingStationsController < ApplicationController
 
   private
 
-  def format_station(station)
+  def format_station(station, favorite_external_ids)
     address = station["AddressInfo"] || {}
     latitude = address["Latitude"]
     longitude = address["Longitude"]
+    external_id = station["ID"].to_s
 
     return if latitude.blank? || longitude.blank?
 
@@ -44,6 +52,7 @@ class ChargingStationsController < ApplicationController
 
     {
       id: station["ID"],
+      external_id: external_id,
       name: address["Title"].presence || "Şarj istasyonu",
       address: [
         address["AddressLine1"],
@@ -58,7 +67,8 @@ class ChargingStationsController < ApplicationController
       }.max,
       connection_types: connections.filter_map { |connection|
         connection.dig("ConnectionType", "Title")
-      }.uniq
+      }.uniq,
+      favorite: favorite_external_ids.include?(external_id)
     }
   end
 end

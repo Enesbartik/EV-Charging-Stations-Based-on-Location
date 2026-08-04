@@ -1,0 +1,50 @@
+<%= form_with model: station, class: "station-form" do |form| %>
+  <% if station.errors.any? %>
+    <div class="form-errors">
+      <strong>İstasyon kaydedilemedi:</strong>
+
+      <ul>
+        <% station.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-field">
+    <%= form.label :name, "İstasyon adı" %>
+    <%= form.text_field :name, required: true %>
+  </div>
+
+  <div class="form-field">
+    <%= form.label :address, "Adres" %>
+    <%= form.text_field :address %>
+  </div>
+
+  <div class="coordinate-fields">
+    <div class="form-field">
+      <%= form.label :latitude, "Enlem" %>
+      <%= form.number_field :latitude,
+                            step: "any",
+                            required: true %>
+    </div>
+
+    <div class="form-field">
+      <%= form.label :longitude, "Boylam" %>
+      <%= form.number_field :longitude,
+                            step: "any",
+                            required: true %>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <%= form.submit(
+          station.persisted? ? "Değişiklikleri Kaydet" : "İstasyonu Ekle",
+          class: "primary-button"
+        ) %>
+
+    <%= link_to "İptal",
+                stations_path,
+                class: "secondary-button" %>
+  </div>
+<% end %>

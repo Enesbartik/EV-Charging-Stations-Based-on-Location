@@ -1,24 +1,37 @@
-# README
+# EV Charging Map
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Bu proje Leaflet + OpenStreetMap tabanlı, kullanıcı konumunu ve Open Charge Map istasyonlarını harita üzerinde gösterir.
 
-Things you may want to cover:
+## Ortam değişkeni ayarı
 
-* Ruby version
+Google adres araması için browser tarafında kullanılacak API anahtarı şu ortam değişkeni üzerinden alınır:
 
-* System dependencies
+- `GOOGLE_MAPS_BROWSER_API_KEY`
 
-* Configuration
+Aşağıdaki örnek gibi bir değer tanımlayabilirsiniz:
 
-* Database creation
+```bash
+export GOOGLE_MAPS_BROWSER_API_KEY="your-key-here"
+```
 
-* Database initialization
+Rails credentials kullanmak isterseniz `config/credentials.yml.enc` içinde aşağıdaki anahtarı tanımlayabilirsiniz:
 
-* How to run the test suite
+```yaml
+google_maps_browser_api_key: your-key-here
+```
 
-* Services (job queues, cache servers, search engines, etc.)
+> Gerçek API anahtarı repository içine yazılmaz. Bu dosyayı commit etmeyin.
 
-* Deployment instructions
+## Yerel çalıştırma
 
-* ...
+```bash
+bin/setup
+bin/rails server
+```
+
+## Testler
+
+```bash
+bin/rails test
+```
+

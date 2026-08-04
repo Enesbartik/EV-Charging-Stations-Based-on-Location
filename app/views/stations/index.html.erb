@@ -1,0 +1,84 @@
+<div class="page-container">
+  <header class="page-header page-header-with-actions">
+    <div>
+      <h1>Kayıtlı İstasyonlar</h1>
+      <p>Kaydettiğiniz ve elle eklediğiniz şarj istasyonları.</p>
+    </div>
+
+    <div class="header-actions">
+      <%= link_to "Haritaya Dön",
+                  root_path,
+                  class: "secondary-button" %>
+
+      <%= link_to "Yeni İstasyon Ekle",
+                  new_station_path,
+                  class: "primary-button" %>
+    </div>
+  </header>
+
+  <% if notice.present? %>
+    <div class="notice-message">
+      <%= notice %>
+    </div>
+  <% end %>
+
+  <% if @stations.empty? %>
+    <div class="empty-state">
+      <h2>Henüz kayıtlı istasyon yok</h2>
+      <p>Yeni bir istasyon ekleyerek başlayabilirsiniz.</p>
+    </div>
+  <% else %>
+    <div class="station-list">
+      <% @stations.each do |station| %>
+        <article class="saved-station-card">
+          <div class="station-card-main">
+            <div class="station-title-row">
+              <h2><%= station.name %></h2>
+
+              <% if station.favorite? %>
+                <span class="favorite-badge">★ Favori</span>
+              <% end %>
+            </div>
+
+            <p class="station-address">
+              <%= station.address.presence || "Adres belirtilmemiş" %>
+            </p>
+
+            <p class="station-coordinates">
+              Enlem: <%= station.latitude %>
+              ·
+              Boylam: <%= station.longitude %>
+            </p>
+
+            <span class="station-source">
+              <%= station.source == "manual" ? "Elle eklendi" : "Open Charge Map" %>
+            </span>
+          </div>
+
+          <div class="station-card-actions">
+            <%= button_to(
+                  station.favorite? ? "Favoriden Çıkar" : "Favoriye Ekle",
+                  toggle_favorite_station_path(station),
+                  method: :patch,
+                  class: "favorite-button"
+                ) %>
+
+            <%= link_to "Düzenle",
+                        edit_station_path(station),
+                        class: "secondary-button" %>
+
+            <%= button_to "Sil",
+                          station_path(station),
+                          method: :delete,
+                          class: "danger-button",
+                          form: {
+                            data: {
+                              turbo_confirm: "Bu istasyon silinsin mi?"
+                            }
+                          } %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  <% end %>
+</div>

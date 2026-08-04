@@ -22,6 +22,15 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
 
+    <% google_maps_key = Rails.application.credentials.google_maps_browser_api_key || ENV["GOOGLE_MAPS_BROWSER_API_KEY"] %>
+    <% if google_maps_key.present? %>
+      <script
+        src="https://maps.googleapis.com/maps/api/js?key=<%= google_maps_key %>&libraries=places"
+        async
+        defer
+      ></script>
+    <% end %>
+
     <link
   rel="stylesheet"
   href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
