@@ -1,14 +1,26 @@
 class ChargingStationsController < ApplicationController
+  ALLOWED_DISTANCES = [5, 10].freeze
+
   def index
     latitude = Float(params.require(:latitude))
     longitude = Float(params.require(:longitude))
+    distance = Integer(params.fetch(:distance, 10))
 
-    results = OpenChargeMapClient.new(
+    unless ALLOWED_DISTANCES.include?(distance)
+      render json: {
+        error: "Arama mesafesi 5 veya 10 km olmalıdır."
+      }, status: :unprocessable_entity
+
+      return
+    end
+
+    stations = OpenChargeMapClient.new(
       latitude: latitude,
-      longitude: longitude
+      longitude: longitude,
+      distance: distance
     ).call
 
-    render json: results.filter_map { |station| format_station(station) }
+    render json: stations.filter_map { |station| format_station(station) }
   rescue ActionController::ParameterMissing, ArgumentError
     render json: {
       error: "Geçerli latitude ve longitude değerleri gönderilmelidir."

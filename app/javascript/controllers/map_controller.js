@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["canvas", "status"]
+  static targets = ["canvas", "status", "distance"]
 
   connect() {
     if (!window.L) {
@@ -19,6 +19,8 @@ export default class extends Controller {
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(this.map)
 
+    this.stationLayer = window.L.layerGroup().addTo(this.map)
+
     this.findUserLocation()
   }
 
@@ -32,18 +34,21 @@ export default class extends Controller {
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const latitude = position.coords.latitude
-        const longitude = position.coords.longitude
-        const coordinates = [latitude, longitude]
+        this.latitude = position.coords.latitude
+        this.longitude = position.coords.longitude
+
+        const coordinates = [this.latitude, this.longitude]
 
         this.map.setView(coordinates, 14)
 
-        window.L.marker(coordinates)
+        this.userMarker = window.L.marker(coordinates, {
+          icon: this.createUserIcon()
+        })
           .addTo(this.map)
           .bindPopup("Konumunuz")
           .openPopup()
 
-        await this.loadStations(latitude, longitude)
+        await this.loadStations()
       },
 
       () => {
@@ -59,58 +64,72 @@ export default class extends Controller {
     )
   }
 
-  async loadStations(latitude, longitude) {
-  this.statusTarget.textContent = "Yakındaki istasyonlar aranıyor..."
-
-  const parameters = new URLSearchParams({
-    latitude: latitude,
-    longitude: longitude
-  })
-
-  try {
-    const response = await fetch(
-      `/charging_stations?${parameters.toString()}`,
-      {
-        headers: {
-          Accept: "application/json"
-        }
-      }
-    )
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.error || "İstasyonlar alınamadı.")
-    }
-
-    if (data.length === 0) {
-      this.statusTarget.textContent =
-        "Yakınınızda şarj istasyonu bulunamadı."
-
+  async changeDistance() {
+    if (this.latitude === undefined || this.longitude === undefined) {
       return
     }
 
-    const bounds = window.L.latLngBounds([
-      [latitude, longitude]
-    ])
-
-    data.forEach((station) => {
-      const marker = this.addStationMarker(station)
-      bounds.extend(marker.getLatLng())
-    })
-
-    this.map.fitBounds(bounds, {
-      padding: [40, 40],
-      maxZoom: 15
-    })
-
-    this.statusTarget.textContent =
-      `${data.length} şarj istasyonu bulundu.`
-  } catch (error) {
-    this.statusTarget.textContent =
-      error.message || "Beklenmeyen bir hata oluştu."
+    await this.loadStations()
   }
-}
+
+  async loadStations() {
+    const distance = this.distanceTarget.value
+
+    this.statusTarget.textContent =
+      `${distance} km içindeki şarj istasyonları aranıyor...`
+
+    this.stationLayer.clearLayers()
+
+    const parameters = new URLSearchParams({
+      latitude: this.latitude,
+      longitude: this.longitude,
+      distance: distance
+    })
+
+    try {
+      const response = await fetch(
+        `/charging_stations?${parameters.toString()}`,
+        {
+          headers: {
+            Accept: "application/json"
+          }
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "İstasyonlar alınamadı.")
+      }
+
+      if (data.length === 0) {
+        this.statusTarget.textContent =
+          `${distance} km içinde şarj istasyonu bulunamadı.`
+
+        return
+      }
+
+      const bounds = window.L.latLngBounds([
+        [this.latitude, this.longitude]
+      ])
+
+      data.forEach((station) => {
+        const marker = this.addStationMarker(station)
+        bounds.extend(marker.getLatLng())
+      })
+
+      this.map.fitBounds(bounds, {
+        padding: [40, 40],
+        maxZoom: 15
+      })
+
+      this.statusTarget.textContent =
+        `${distance} km içinde ${data.length} şarj istasyonu bulundu.`
+    } catch (error) {
+      this.statusTarget.textContent =
+        error.message || "Beklenmeyen bir hata oluştu."
+    }
+  }
 
   addStationMarker(station) {
     const connections =
@@ -121,20 +140,61 @@ export default class extends Controller {
     const popup = `
       <div class="station-popup">
         <strong>${this.escapeHtml(station.name)}</strong>
-        <p>${this.escapeHtml(station.address || "Adres bulunamadı")}</p>
-        <p><b>Operatör:</b> ${this.escapeHtml(station.operator || "Bilinmiyor")}</p>
-        <p><b>Durum:</b> ${this.escapeHtml(station.status || "Bilinmiyor")}</p>
-        <p><b>Güç:</b> ${station.power_kw ? `${station.power_kw} kW` : "Bilinmiyor"}</p>
-        <p><b>Bağlantı:</b> ${this.escapeHtml(connections)}</p>
+
+        <p>
+          ${this.escapeHtml(station.address || "Adres bulunamadı")}
+        </p>
+
+        <p>
+          <b>Operatör:</b>
+          ${this.escapeHtml(station.operator || "Bilinmiyor")}
+        </p>
+
+        <p>
+          <b>Durum:</b>
+          ${this.escapeHtml(station.status || "Bilinmiyor")}
+        </p>
+
+        <p>
+          <b>Güç:</b>
+          ${station.power_kw ? `${station.power_kw} kW` : "Bilinmiyor"}
+        </p>
+
+        <p>
+          <b>Bağlantı:</b>
+          ${this.escapeHtml(connections)}
+        </p>
       </div>
     `
 
-    const marker = window.L
-  .marker([station.latitude, station.longitude])
-  .addTo(this.map)
-  .bindPopup(popup)
+    return window.L.marker(
+      [station.latitude, station.longitude],
+      {
+        icon: this.createStationIcon()
+      }
+    )
+      .addTo(this.stationLayer)
+      .bindPopup(popup)
+  }
 
-    return marker
+  createUserIcon() {
+    return window.L.divIcon({
+      className: "custom-map-icon user-map-icon",
+      html: '<span class="map-pin"></span>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      popupAnchor: [0, -28]
+    })
+  }
+
+  createStationIcon() {
+    return window.L.divIcon({
+      className: "custom-map-icon station-map-icon",
+      html: '<span class="map-pin"></span>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      popupAnchor: [0, -28]
+    })
   }
 
   escapeHtml(value) {

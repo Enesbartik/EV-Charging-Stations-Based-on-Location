@@ -5,10 +5,37 @@
   </header>
 
   <main data-controller="map">
-    <p class="location-status" data-map-target="status">
-      Konumunuz alınıyor...
-    </p>
+    <section class="map-toolbar">
+      <p class="location-status" data-map-target="status">
+        Konumunuz alınıyor...
+      </p>
+
+      <div class="distance-filter">
+        <label for="distance">Arama mesafesi</label>
+
+        <select
+          id="distance"
+          data-map-target="distance"
+          data-action="change->map#changeDistance"
+        >
+          <option value="5">5 km</option>
+          <option value="10" selected>10 km</option>
+        </select>
+      </div>
+    </section>
 
     <div id="map" data-map-target="canvas"></div>
+
+    <div class="map-legend">
+      <span>
+        <span class="legend-dot legend-dot-user"></span>
+        Konumunuz
+      </span>
+
+      <span>
+        <span class="legend-dot legend-dot-station"></span>
+        Şarj istasyonu
+      </span>
+    </div>
   </main>
 </div>
